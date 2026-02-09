@@ -1,6 +1,5 @@
 package com.blogapplication.entities;
 
-import com.blogapplication.service.UserService;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

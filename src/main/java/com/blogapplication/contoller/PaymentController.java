@@ -1,11 +1,7 @@
 package com.blogapplication.contoller;
 
 import com.blogapplication.dto.payment.OrderRequest;
-import com.blogapplication.dto.payment.OrderResponse;
-import com.blogapplication.dto.payment.PaymentRequest;
 import com.blogapplication.dto.payment.PaymentResponse;
-import com.razorpay.*;
-
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 import com.razorpay.Utils;

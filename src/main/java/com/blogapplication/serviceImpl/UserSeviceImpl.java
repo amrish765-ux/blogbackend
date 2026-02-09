@@ -1,26 +1,28 @@
 package com.blogapplication.serviceImpl;
 
 import com.blogapplication.Exception.ResourceNotFoundException;
+import com.blogapplication.Exception.UserAlreadyExistsException;
 import com.blogapplication.entities.User;
 import com.blogapplication.payload.UserDto;
 import com.blogapplication.repo.UserRepo;
 import com.blogapplication.service.UserService;
-import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-
 import java.util.List;
-import java.util.stream.Collectors;
 
+
+@Slf4j
 @Service
 public class UserSeviceImpl implements UserService {
 
-
-    private UserService userService;
+    Logger logger= LoggerFactory.getLogger(UserSeviceImpl.class);
 
     @Autowired
     private ModelMapper modelMapper;
@@ -33,10 +35,22 @@ public class UserSeviceImpl implements UserService {
 
     @Override
     public UserDto createUser(UserDto userDto) {
-        User user=this.modelMapper.map(userDto, User.class);
-        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        User addedUser=this.userRepo.save(user);
-        return this.modelMapper.map(addedUser,UserDto.class);
+
+        if(userRepo.existsByEmail(userDto.getEmail())){
+//            log.warn("User already exists with email: {}",userDto.getEmail());
+            throw new UserAlreadyExistsException("User already exists with email: " + userDto.getEmail());
+        }
+
+        try{
+            User user=this.modelMapper.map(userDto, User.class);
+            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+            User addedUser=this.userRepo.save(user);
+            log.info("User created successfully: id={}, email={}", addedUser.getId(), addedUser.getEmail());
+            return this.modelMapper.map(addedUser,UserDto.class);
+        }catch (Exception e){
+//            log.warn("CreateUser failed due to DB unique constraint: email={}", userDto.getEmail(), e);
+            throw new UserAlreadyExistsException("user already exists by email"+userDto.getEmail());
+        }
     }
 
     @Override
@@ -71,8 +85,14 @@ public class UserSeviceImpl implements UserService {
 
     @Override
     public void deleteUser(Integer userId) {
+
         User cat = this.userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("user", "user id", userId));
+        String email= cat.getEmail();
+        String username=cat.getUsername();
         this.userRepo.delete(cat);
+        log.info("user deleted successfully:- email: {} name: {}",email,username);
     }
+
+
 }

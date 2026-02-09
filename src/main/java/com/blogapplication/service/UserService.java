@@ -5,6 +5,7 @@ import com.blogapplication.payload.UserDto;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public interface UserService {
@@ -13,4 +14,5 @@ public interface UserService {
     UserDto getUserById(Integer userId);
     List<UserDto> getAllUser();
     void deleteUser(Integer userId);
+
 }

@@ -4,6 +4,7 @@ import com.blogapplication.payload.ApiResponse;
 import com.blogapplication.payload.UserDto;
 import com.blogapplication.service.UserService;
 import jakarta.validation.Valid;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +42,8 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<ApiResponse>deleteUser(@PathVariable Integer userId){
-        this.userService.deleteUser(userId);
-        return new ResponseEntity<ApiResponse>(new ApiResponse("user deleted successfully",true),HttpStatus.OK);
+    public ResponseEntity<ApiResponse> deleteUser(@PathVariable Integer userId){
+        userService.deleteUser(userId);
+        return ResponseEntity.ok(new ApiResponse("user deleted successfully", true, MDC.get("requestId")));
     }
 }

@@ -1,5 +1,6 @@
 package com.blogapplication.payload;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +25,7 @@ public class UserDto {
 
     @NotEmpty
     @Size(min = 4,max = 10,message = "invalid password!")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @NotNull

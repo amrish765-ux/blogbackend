@@ -1,14 +1,16 @@
 package com.blogapplication.security;
 
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,12 +21,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.net.FileNameMap;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private Logger logger= LoggerFactory.getLogger(OncePerRequestFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     @Autowired
     private JwtHelper jwtHelper;
@@ -33,58 +34,63 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private UserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        String requestHeader=request.getHeader("Authorization");
+        String header = request.getHeader("Authorization");
 
-        logger.info("Header : {}",requestHeader);
 
-        String username=null;
-        String token=null;
-        System.out.println(requestHeader);
-
-        if(requestHeader!=null&&requestHeader.startsWith("Bearer")){
-            token=requestHeader.substring(7);
-            try {
-                username=this.jwtHelper.getUsernameFromToken(token);
-            }catch (IllegalArgumentException ex){
-                logger.info("Illegal Argument while fetching the username !!");
-                ex.printStackTrace();
-            }catch (ExpiredJwtException ex){
-                logger.info("Jwt token has expired!!");
-                ex.printStackTrace();
-            }catch (MalformedJwtException ex){
-                logger.info("Some changed has done in token !! Invalid Token");
-                ex.printStackTrace();
-            }
-            catch (Exception ex){
-                ex.printStackTrace();
-            }
-        }else{
-            logger.info("Invalid header value!!");
+        if (header == null || header.isBlank() || !header.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
         }
-        if(username!=null&& SecurityContextHolder.getContext().getAuthentication()==null){
-            try {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-                Boolean validateToken = this.jwtHelper.validateToken(token, userDetails);
-                if (validateToken) {
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities());
+
+        String token = header.substring(7).trim();
+
+
+        long dots = token.chars().filter(ch -> ch == '.').count();
+        if (dots != 2) {
+            log.warn("Bad JWT format {} {} rid={}", request.getMethod(), request.getRequestURI(), MDC.get("requestId"));
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        try {
+            String username = jwtHelper.getUsernameFromToken(token);
+
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                if (jwtHelper.validateToken(token, userDetails)) {
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+
+
+                    log.debug("JWT validated for user={} {} {} rid={}",
+                            username, request.getMethod(), request.getRequestURI(), MDC.get("requestId"));
                 } else {
-                    logger.info("validation failed!");
+                    log.warn("JWT validation failed for user={} {} {} rid={}",
+                            username, request.getMethod(), request.getRequestURI(), MDC.get("requestId"));
                 }
-            }catch (UsernameNotFoundException e){
-                logger.warn("User not found: {}",username);
-            }catch (Exception e){
-                logger.error("Error during  authentication: {}",e.getMessage());
             }
 
-        }
-        filterChain.doFilter(request,response);
+        } catch (ExpiredJwtException ex) {
 
+            log.warn("JWT expired {} {} rid={}", request.getMethod(), request.getRequestURI(), MDC.get("requestId"));
+        } catch (UsernameNotFoundException ex) {
+            log.warn("JWT user not found {} {} rid={}", request.getMethod(), request.getRequestURI(), MDC.get("requestId"));
+        } catch (JwtException | IllegalArgumentException ex) {
+
+            log.warn("JWT invalid {} {} rid={}", request.getMethod(), request.getRequestURI(), MDC.get("requestId"));
+        } catch (Exception ex) {
+
+            log.error("JWT filter error {} {} rid={}", request.getMethod(), request.getRequestURI(), MDC.get("requestId"), ex);
+        }
+
+        filterChain.doFilter(request, response);
     }
 }

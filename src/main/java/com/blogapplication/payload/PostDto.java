@@ -1,10 +1,5 @@
 package com.blogapplication.payload;
 
-import com.blogapplication.entities.Categories;
-import com.blogapplication.entities.Comment;
-import com.blogapplication.entities.User;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -4,12 +4,10 @@ import com.blogapplication.entities.User;
 import com.blogapplication.payload.JwtRequest;
 import com.blogapplication.payload.JwtResponse;
 import com.blogapplication.payload.UserDto;
+import com.blogapplication.repo.UserRepo;
 import com.blogapplication.security.JwtHelper;
 import com.blogapplication.service.UserService;
-import io.jsonwebtoken.Jwt;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +17,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
+
+
 
 @RestController
 @RequestMapping("/auth")
@@ -36,7 +36,8 @@ public class AuthController {
     @Autowired
     private UserService  userService;
 
-    private Logger logger= LoggerFactory.getLogger(AuthController.class);
+    @Autowired
+    private UserRepo userRepo;
 
 
     @PostMapping("/login")
@@ -45,7 +46,11 @@ public class AuthController {
         UserDetails userDetails=userDetailsService.loadUserByUsername(request.getUsername());
         String token=this.jwtHelper.generateToken(userDetails);
 
+        User user = userRepo.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         JwtResponse response= JwtResponse.builder()
+                .userId(user.getId())
                 .token(token)
                 .username(userDetails.getUsername()).build();
         return new ResponseEntity<>(response, HttpStatus.OK);

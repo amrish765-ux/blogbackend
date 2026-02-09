@@ -15,9 +15,6 @@ import java.util.List;
 @Service
 public class CategoriesImpl implements CategoryService {
 
-
-    private CategoryService categoryService;
-
     @Autowired
     private ModelMapper modelMapper;
 

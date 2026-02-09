@@ -1,6 +1,5 @@
 package com.blogapplication.service;
 
-import com.blogapplication.entities.Post;
 import com.blogapplication.payload.PostDto;
 import com.blogapplication.payload.PostResponse;
 import org.springframework.stereotype.Service;

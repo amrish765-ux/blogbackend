@@ -3,11 +3,13 @@ package com.blogapplication.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
 
 @Entity
+@Table(name = "users")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -20,7 +22,7 @@ public class User implements UserDetails {
     private int id;
     @Column
     private String name;
-    @Column
+    @Column(unique = true)
     private String email;
     @Column
     private String password;
@@ -34,16 +36,21 @@ public class User implements UserDetails {
     private List<Post>posts=new ArrayList<>();
 
 
-    @ManyToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
-    @JoinTable(name = "user_role",
-                joinColumns = @JoinColumn(name = "user_id",referencedColumnName = "id"),
-                inverseJoinColumns = @JoinColumn(name = "role_id",referencedColumnName = "id")
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_role",
+            joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
     )
-    private Set<Role>roles=new HashSet<>();
+    private Set<Role> roles = new HashSet<>();
+
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        return roles.stream()
+                .map(r->new SimpleGrantedAuthority(r.getName()))
+                .toList();
     }
 
     @Override

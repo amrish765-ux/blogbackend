@@ -1,9 +1,9 @@
 package com.blogapplication.contoller;
 
-import com.blogapplication.entities.Comment;
 import com.blogapplication.payload.ApiResponse;
 import com.blogapplication.payload.CommentDto;
 import com.blogapplication.service.CommentService;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +25,7 @@ public class CommentController {
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<ApiResponse>deleteComment(@PathVariable Integer commentId){
         this.commentService.deleteComment(commentId);
-        return new ResponseEntity<ApiResponse>(new ApiResponse("comment deleted successully",true),
+        return new ResponseEntity<ApiResponse>(new ApiResponse("comment deleted successully",true, MDC.get("requestId")),
                 HttpStatus.OK);
     }
 

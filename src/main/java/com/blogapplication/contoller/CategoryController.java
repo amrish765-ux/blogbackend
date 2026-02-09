@@ -3,7 +3,9 @@ package com.blogapplication.contoller;
 import com.blogapplication.payload.ApiResponse;
 import com.blogapplication.payload.CategoryDto;
 import com.blogapplication.service.CategoryService;
+import com.blogapplication.service.UserService;
 import jakarta.validation.Valid;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,9 @@ public class CategoryController {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private UserService userService;
 
     @PostMapping("/")
     public ResponseEntity<CategoryDto>createCategory(@Valid @RequestBody CategoryDto categoryDto){
@@ -45,6 +50,6 @@ public class CategoryController {
     @DeleteMapping("/{catId}")
     public ResponseEntity<ApiResponse>deteleCategory(@PathVariable Integer catId){
         this.categoryService.deleteCategory(catId);
-        return new ResponseEntity<ApiResponse>(new ApiResponse("category successfully deleted!!",true),HttpStatus.OK);
+        return new ResponseEntity<ApiResponse>(new ApiResponse("category successfully deleted!!",true, MDC.get("requestId")),HttpStatus.OK);
     }
 }

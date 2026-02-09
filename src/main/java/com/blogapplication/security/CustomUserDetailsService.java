@@ -15,10 +15,11 @@ public class CustomUserDetailsService implements UserDetailsService {
     
     @Autowired
     private UserRepo userRepo;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-//        loading user from database by username
-        User user=this.userRepo.findByEmail(username).orElseThrow(() -> new ResourceNotFoundException("user", "email: " + username, 0));
-        return user;
+        return userRepo.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
     }
+
 }

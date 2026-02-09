@@ -2,15 +2,15 @@ package com.blogapplication.contoller;
 
 
 import com.blogapplication.config.AppConstant;
-import com.blogapplication.entities.Post;
 import com.blogapplication.payload.ApiResponse;
 import com.blogapplication.payload.PostDto;
 import com.blogapplication.payload.PostResponse;
 import com.blogapplication.service.PostService;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,11 +52,12 @@ public class PostController {
     }
 
 //    delete post by id
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/posts/{postId}")
     public ApiResponse deletePost(@PathVariable Integer postId){
         this.postService
                 .deletePost(postId);
-        return new ApiResponse("Post is successfully deleted",true);
+        return new ApiResponse("Post is successfully deleted",true, MDC.get("requestId"));
     }
 
 //    get post by id
@@ -76,7 +77,7 @@ public class PostController {
         PostResponse postResponse = this.postService.getAllPost(pageNumber,pageSize,sortBy,direction); // Ensure this method includes necessary mappings
         return new ResponseEntity<PostResponse>(postResponse, HttpStatus.OK);
     }
-//    search post by title
+
 
     @GetMapping("/posts/search/{keywords}")
     public ResponseEntity<List<PostDto>>searchPostByTitle(@PathVariable("keywords") String keyword){
