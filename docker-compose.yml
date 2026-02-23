@@ -12,6 +12,6 @@ services:
     ports:
       - "9090:9090"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://gondola.proxy.rlwy.net:48310/railway?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: zidkFbdZQjSNxinoIyzPLnrARRihZtbC
+      SPRING_DATASOURCE_URL: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQLUSER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQLPASSWORD}
