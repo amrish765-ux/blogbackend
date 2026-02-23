@@ -1,0 +1,14 @@
+package com.blogapplication.dto.payment;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PaymentResponse {
+    private String razorpayOrderId;
+    private String razorpayPaymentId;
+    private String razorpaySignature;
+}
